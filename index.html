@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Playlist Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        header {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        header h1 {
+            color: #003366;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .gallery-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 columns */
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+        }
+
+        .playlist-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .playlist-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .playlist-card img {
+            width: 100%;
+            height: auto;
+        }
+
+        .playlist-card .title {
+            padding: 10px;
+            background-color: #003366;
+            color: #fff;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        .playlist-card:hover .title {
+            background-color: #1a5276;
+        }
+
+        /* Make the grid responsive */
+        @media (max-width: 1200px) {
+            .gallery-container {
+                grid-template-columns: repeat(3, 1fr); /* 3 columns for medium screens */
+            }
+        }
+
+        @media (max-width: 900px) {
+            .gallery-container {
+                grid-template-columns: repeat(2, 1fr); /* 2 columns for smaller screens */
+            }
+        }
+
+        @media (max-width: 600px) {
+            .gallery-container {
+                grid-template-columns: 1fr; /* 1 column for mobile screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Playlist Gallery</h1>
+    </header>
+
+    <div class="gallery-container" id="playlistGallery">
+        <!-- Playlists will be dynamically inserted here -->
+    </div>
+
+    <script>
+        // Replace with your YouTube API key
+        const API_KEY = 'AIzaSyB0LtMDKqfKfenl7S7E8IARkaN5787ESrA';
+
+        // Replace with the channel ID you want to fetch playlists from
+        const CHANNEL_ID = 'UCe9HP_kAUJP_XFQ0JB3Slfw';
+
+        // Function to fetch playlists from the YouTube channel
+        async function fetchPlaylists(pageToken = '') {
+            const response = await fetch(`https://www.googleapis.com/youtube/v3/playlists?part=snippet&channelId=${CHANNEL_ID}&maxResults=50&pageToken=${pageToken}&key=${API_KEY}`);
+            const data = await response.json();
+            return data;
+        }
+
+        // Function to render playlists
+        async function renderPlaylists() {
+            const gallery = document.getElementById('playlistGallery');
+            let pageToken = ''; // To track pagination
+            let playlists = [];
+
+            do {
+                // Fetch playlists for the current page
+                const data = await fetchPlaylists(pageToken);
+                playlists = data.items;
+
+                // Render playlists
+                playlists.forEach(playlist => {
+                    const playlistCard = document.createElement('div');
+                    playlistCard.classList.add('playlist-card');
+                    playlistCard.setAttribute('data-url', `https://www.youtube.com/playlist?list=${playlist.id}`);
+                    playlistCard.innerHTML = `
+                        <img src="${playlist.snippet.thumbnails.medium.url}" alt="${playlist.snippet.title}">
+                        <div class="title">${playlist.snippet.title}</div>
+                    `;
+                    playlistCard.addEventListener('click', function() {
+                        window.open(`https://www.youtube.com/playlist?list=${playlist.id}`, '_blank');
+                    });
+                    gallery.appendChild(playlistCard);
+                });
+
+                // Check if there are more pages to fetch
+                pageToken = data.nextPageToken;
+
+            } while (pageToken); // Continue fetching as long as there is a nextPageToken
+        }
+
+        // Load playlists when the page loads
+        renderPlaylists();
+    </script>
+</body>
+</html>
